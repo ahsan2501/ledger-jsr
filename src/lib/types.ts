@@ -241,3 +241,32 @@ export type Profile = {
   discreet_push: boolean;
   client_wait_days: number;
 };
+
+// ---------------- Spending ----------------
+export const SPEND_CATEGORIES = [
+  "Grocery", "Vegetables & fruits", "Meat & fish", "Dairy", "Eating out", "Food delivery",
+  "Fuel", "Transport", "Shopping", "Bills & utilities", "Rent", "Health & medicine",
+  "Household", "Personal care", "Education", "Entertainment", "Travel", "Gifts", "Other",
+] as const;
+
+export const PAYMENT_MODES = [
+  { value: "upi", label: "UPI" },
+  { value: "cash", label: "Cash" },
+  { value: "debit_card", label: "Debit card" },
+  { value: "credit_card", label: "Credit card" },
+  { value: "net_banking", label: "Net banking" },
+  { value: "wallet", label: "Wallet" },
+  { value: "other", label: "Other" },
+] as const;
+export const modeLabel = (m: string) => PAYMENT_MODES.find((x) => x.value === m)?.label ?? m;
+
+export type Expense = {
+  id: string;
+  spent_on: string;
+  amount: number | string;
+  category: string;
+  payment_mode: string;
+  note: string | null;
+  is_demo: boolean;
+  created_at: string;
+};

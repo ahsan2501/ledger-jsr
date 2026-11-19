@@ -5,6 +5,7 @@ export function FinanceTabs({ active }: { active: string }) {
     { href: "/finance/loans", label: "Loans" },
     { href: "/finance/cards", label: "Cards" },
     { href: "/finance/debts", label: "Money owed" },
+    { href: "/finance/spending", label: "Spending" },
     { href: "/work/invoices", label: "Agency receivables" },
   ]} />;
 }

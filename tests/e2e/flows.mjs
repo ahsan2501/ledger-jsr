@@ -124,6 +124,30 @@ await step("Sign in (password, private app)", async () => {
   await page.getByText("Needs attention").waitFor();
 });
 
+await step("Spending: '₹ Add spend' on Home with today's date filled in, a category and payment mode", async () => {
+  await page.goto(`${BASE}/`);
+  await page.getByRole("button", { name: "₹ Add spend" }).click();
+  const s = sheet(page);
+  assert.equal(await s.getByLabel("Date").inputValue(), today, "date pre-filled with today (IST)");
+  await s.getByLabel("Amount").fill("1,240");
+  await s.getByText("Meat & fish", { exact: true }).click();
+  await s.getByText("Cash", { exact: true }).click();
+  await submit(page, "Add spend");
+  const { data } = await admin.from("expenses").select("*").eq("owner_id", ownerId);
+  assert.equal(data.length, 1);
+  assert.deepEqual([Number(data[0].amount), data[0].category, data[0].payment_mode, data[0].spent_on], [1240, "Meat & fish", "cash", today]);
+  await page.getByText("Meat & fish · 1").waitFor();
+  await page.getByRole("button", { name: "Quick add" }).click();
+  await sheet(page).getByRole("button", { name: /^Spending/ }).click();
+  await sheet(page).getByLabel("Amount").fill("300");
+  await sheet(page).getByText("+ New", { exact: true }).click();
+  await sheet(page).getByLabel("New category name").fill("Pet care");
+  await submit(page, "Add spend");
+  await page.goto(`${BASE}/finance/spending`);
+  await page.getByText("total: ₹1,540").waitFor();
+  await page.screenshot({ path: `${SHOTS}/spending.png`, fullPage: true });
+});
+
 // Fire reminders immediately: reminder time 00:00 IST so today's reminders are already due.
 await step("Settings: reminder time saved (set to 00:00 for the test)", async () => {
   await page.goto(`${BASE}/settings`);
@@ -311,6 +335,8 @@ await step("Flow 5c: another account cannot see or change the owner's records", 
   // Direct database API access with the other user's token
   const anonClient = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
   await anonClient.auth.signInWithPassword(OTHER);
+  const { data: spendRows } = await anonClient.from("expenses").select("id");
+  assert.equal(spendRows.length, 0, "spending is private too");
   const { data: rows } = await anonClient.from("invoices").select("id");
   assert.equal(rows.length, 0, "REST select returns nothing");
   const { data: upd } = await anonClient.from("invoices").update({ amount: 1 }).eq("id", invoiceId).select();
@@ -337,7 +363,7 @@ await step("Screenshots: iPhone layout with demo data", async () => {
   await p.goto(`${BASE}/settings`);
   await p.getByRole("button", { name: "Load demo data" }).click();
   await p.waitForTimeout(1500);
-  for (const [name, url] of [["home", "/"], ["finance", "/finance"], ["work", "/work"], ["invoices", "/work/invoices"], ["inbox", "/inbox"]]) {
+  for (const [name, url] of [["spending", "/finance/spending"], ["home", "/"], ["finance", "/finance"], ["work", "/work"], ["invoices", "/work/invoices"], ["inbox", "/inbox"]]) {
     await p.goto(BASE + url);
     await p.waitForLoadState("networkidle");
     await p.screenshot({ path: `${SHOTS}/iphone-${name}.png`, fullPage: name === "home" });

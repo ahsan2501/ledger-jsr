@@ -51,7 +51,7 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
 }
 
 export const btn = {
-  primary: "inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-sm font-medium text-accent-text active:opacity-80 disabled:opacity-50",
+  primary: "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-accent px-3.5 py-2 text-sm font-medium text-accent-text active:opacity-80 disabled:opacity-50",
   secondary: "inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium active:bg-surface-2 disabled:opacity-50",
   ghost: "inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft disabled:opacity-50",
   danger: "inline-flex items-center justify-center gap-1.5 rounded-xl border border-danger/40 px-3 py-2 text-sm font-medium text-danger disabled:opacity-50",

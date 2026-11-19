@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { AttentionList } from "@/components/attention";
 import { CashFlowChart, DebtTrendChart, type Snapshot } from "@/components/charts";
-import { Card, CardHeader, cx } from "@/components/ui";
+import { Card, CardHeader, btn, cx } from "@/components/ui";
+import { SheetButton } from "@/components/forms";
+import { SpendForm } from "@/components/spend-form";
+import { SpendBars } from "@/components/spend-bars";
+import { summariseSpending } from "@/lib/spending";
+import { modeLabel, type Expense } from "@/lib/types";
 import { buildAttention } from "@/lib/attention";
 import { buildCashFlow, projectPipeline, summariseCashFlow } from "@/lib/cashflow";
 import { getActuals, getDebts, getDueReminders, getInvoices, getJsr, getLookups, getObligations, getProfile } from "@/lib/data";
-import { addDays, fmtDate, inr, toNum, todayIST } from "@/lib/format";
+import { addDays, fmtDate, inr, monthBounds, toNum, todayIST } from "@/lib/format";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Home" };
@@ -13,12 +18,18 @@ export const metadata = { title: "Home" };
 export default async function Home() {
   const { supabase } = await requireUser();
   const today = todayIST();
-  const [profile, obligations, jsr, debts, invoices, actuals, reminders, lookups, projectsRes, snapsRes] = await Promise.all([
+  const { start: monthStart } = monthBounds(today);
+  const [profile, obligations, jsr, debts, invoices, actuals, reminders, lookups, projectsRes, snapsRes, spendRes] = await Promise.all([
     getProfile(supabase), getObligations(supabase), getJsr(supabase), getDebts(supabase), getInvoices(supabase),
     getActuals(supabase, today), getDueReminders(supabase, today), getLookups(supabase),
     supabase.from("projects").select("id, name, status, expected_invoice_amount, expected_invoice_date, clients(name)"),
     supabase.from("balance_snapshots").select("snapshot_on, loans_total, cards_total, owe_total, source").order("snapshot_on"),
+    supabase.from("expenses").select("*").gte("spent_on", addDays(today, -6) < monthStart ? addDays(today, -6) : monthStart)
+      .order("spent_on", { ascending: false }).order("created_at", { ascending: false }),
   ]);
+  const spends = (spendRes.data ?? []) as Expense[];
+  const month = summariseSpending(spends.filter((e) => e.spent_on >= monthStart), today);
+  const last7 = summariseSpending(spends, today).last7;
 
   const week = addDays(today, 7);
   const open = obligations.filter((o) => toNum(o.amount_remaining) > 0);
@@ -41,7 +52,12 @@ export default async function Home() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted">{fmtDate(today, today)} · India time</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted">{fmtDate(today, today)} · India time</p>
+        <SheetButton className={btn.primary} label="₹ Add spend" title="Add spend">
+          <SpendForm today={today} extraCategories={lookups.spendCategories} />
+        </SheetButton>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Tile href="/finance?view=week&dir=out" label="To pay · next 7 days" value={inr(sum(dueOut))}
@@ -71,6 +87,32 @@ export default async function Home() {
       <Card>
         <CardHeader title="Needs attention" sub="Overdue, today and the next 7 days" />
         <AttentionList items={attention} lookups={lookups} waitDays={profile.client_wait_days} limit={8} />
+      </Card>
+
+      <Card>
+        <CardHeader title="Spending" sub="This month, by category" action={<Link href="/finance/spending" className="text-sm text-accent">All spending →</Link>} />
+        <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
+          <div>
+            <div className="tabular mb-3 grid grid-cols-3 gap-2 text-xs">
+              <Mini label="Today" value={inr(month.today)} />
+              <Mini label="Last 7 days" value={inr(last7)} />
+              <Mini label="This month" value={inr(month.total)} />
+            </div>
+            {month.count ? <SpendBars groups={month.byCategory} limit={5} /> : <p className="text-sm text-muted">No spending logged this month. Tap <strong>₹ Add spend</strong> after you pay for something.</p>}
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted">Recent</p>
+            <ul className="divide-y divide-line">
+              {spends.slice(0, 6).map((e) => (
+                <li key={e.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
+                  <span className="min-w-0 truncate">{e.category}<span className="text-xs text-muted"> · {modeLabel(e.payment_mode)} · {fmtDate(e.spent_on, today)}{e.note ? ` · ${e.note}` : ""}</span></span>
+                  <span className="tabular shrink-0 font-medium">{inr(e.amount)}</span>
+                </li>
+              ))}
+              {!spends.length ? <li className="py-2 text-sm text-muted">Nothing yet.</li> : null}
+            </ul>
+          </div>
+        </div>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-5">

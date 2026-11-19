@@ -247,7 +247,7 @@ export async function logFollowUp(_: ActionResult, fd: FormData): R {
 // ---------------- generic deletes ----------------
 const DELETABLE = new Set([
   "loans", "loan_payments", "credit_cards", "card_statements", "card_payments", "debts", "debt_payments", "debt_installments",
-  "clients", "projects", "jsr_items", "invoices", "invoice_receipts", "balance_snapshots",
+  "clients", "projects", "jsr_items", "invoices", "invoice_receipts", "balance_snapshots", "expenses",
 ]);
 export async function deleteRow(_: ActionResult, fd: FormData): R {
   return act(async (sb) => {
@@ -274,5 +274,32 @@ export async function snapshotNow(_: ActionResult): R {
   return act(async (sb, user) => {
     must(await sb.rpc("take_balance_snapshot", { p_owner: user.id, p_on: todayIST(), p_source: "manual" }));
     return "Snapshot saved";
+  });
+}
+
+// ---------------- Spending ----------------
+const MODES = new Set(["upi", "cash", "debit_card", "credit_card", "net_banking", "wallet", "other"]);
+function expenseFields(fd: FormData) {
+  const custom = str(fd, "new_category");
+  const category = (str(fd, "category") === "__new" ? custom : str(fd, "category")) ?? custom;
+  if (!category) throw new Error("Pick a category");
+  if (category.length > 40) throw new Error("Category name is too long (40 characters max)");
+  const mode = str(fd, "payment_mode") ?? "upi";
+  if (!MODES.has(mode)) throw new Error("Pick a payment mode");
+  return {
+    amount: reqAmt(fd, "amount", "Amount"),
+    spent_on: date(fd, "spent_on") ?? todayIST(),
+    category, payment_mode: mode, note: str(fd, "note"),
+  };
+}
+export async function createExpense(_: ActionResult, fd: FormData): R {
+  return act(async (sb) => {
+    must(await sb.from("expenses").insert(expenseFields(fd)));
+    return "Spend added";
+  });
+}
+export async function updateExpense(_: ActionResult, fd: FormData): R {
+  return act(async (sb) => {
+    must(await sb.from("expenses").update(expenseFields(fd)).eq("id", req(fd, "id", "Spend")));
   });
 }

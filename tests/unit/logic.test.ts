@@ -137,3 +137,20 @@ describe("month labels", () => {
     expect(fmtMonth("2026-10-31")).toBe("Oct ’26");
   });
 });
+
+describe("spending", () => {
+  it("totals by today, last 7 days, category and payment mode", async () => {
+    const { summariseSpending, monthRange, shiftMonth } = await import("@/lib/spending");
+    const e = (spent_on: string, amount: number, category: string, payment_mode = "upi") =>
+      ({ id: spent_on + amount, spent_on, amount, category, payment_mode, note: null, is_demo: false, created_at: "" });
+    const s = summariseSpending([e(T, 1240, "Grocery"), e(T, 680, "Meat & fish", "cash"), e("2026-11-15", 500, "Grocery"), e("2026-11-02", 3000, "Rent", "net_banking")], T);
+    expect(s.today).toBe(1920);
+    expect(s.last7).toBe(2420);
+    expect(s.total).toBe(5420);
+    expect(s.byCategory[0]).toMatchObject({ key: "Rent", total: 3000 });
+    expect(s.byCategory.find((g) => g.key === "Grocery")).toMatchObject({ total: 1740, count: 2 });
+    expect(s.byMode.find((g) => g.key === "cash")!.total).toBe(680);
+    expect(monthRange("2026-02")).toEqual({ start: "2026-02-01", end: "2026-02-28" });
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+});

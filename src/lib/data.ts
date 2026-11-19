@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { addDays, toNum, todayIST } from "./format";
 import { nextNumber } from "./numbering";
 import type { ActualPayment } from "./cashflow";
-import type { Debt, Invoice, JsrItem, Obligation, Profile, Reminder } from "./types";
+import { SPEND_CATEGORIES, type Debt, type Invoice, type JsrItem, type Obligation, type Profile, type Reminder } from "./types";
 import { PAST_DAYS } from "./cashflow";
 
 function rows<T>(res: { data: T[] | null; error: { message: string } | null }): T[] {
@@ -73,20 +73,25 @@ export type Lookups = {
   debts: { id: string; counterparty: string; direction: string }[];
   nextInvoiceNumber: string;
   today: string;
+  /** your own categories used before (beyond the built-in list) */
+  spendCategories: string[];
 };
 
 export async function getLookups(sb: SupabaseClient): Promise<Lookups> {
-  const [c, p, cards, j, d, inv] = await Promise.all([
+  const [c, p, cards, j, d, inv, ex] = await Promise.all([
     sb.from("clients").select("id, name").eq("archived", false).order("name"),
     sb.from("projects").select("id, name, client_id").neq("status", "closed").order("name"),
     sb.from("credit_cards").select("id, nickname, statement_day, due_day").eq("active", true).order("nickname"),
     sb.from("v_jsr_items").select("id, title, client_name").eq("is_active", true).order("client_name"),
     sb.from("v_debts").select("id, counterparty, direction").eq("is_settled", false).eq("closed", false),
     sb.from("invoices").select("invoice_number").order("created_at", { ascending: false }).limit(1),
+    sb.from("expenses").select("category").order("created_at", { ascending: false }).limit(300),
   ]);
+  const builtIn = new Set<string>(SPEND_CATEGORIES);
+  const spendCategories = [...new Set((ex.data ?? []).map((e) => e.category as string))].filter((x) => !builtIn.has(x));
   return {
     clients: c.data ?? [], projects: p.data ?? [], cards: cards.data ?? [], jsr: j.data ?? [], debts: d.data ?? [],
-    nextInvoiceNumber: nextNumber(inv.data?.[0]?.invoice_number), today: todayIST(),
+    nextInvoiceNumber: nextNumber(inv.data?.[0]?.invoice_number), today: todayIST(), spendCategories,
   };
 }
 

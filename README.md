@@ -11,7 +11,7 @@ A private, single-user PWA that combines personal finances (loans, credit cards,
 | Area | Path |
 |---|---|
 | Home: three tiles, Needs attention, 30-day cash flow, debt trend, quick add, search | `src/app/(app)/page.tsx` |
-| Finance: due/overdue filters, loans, cards, money owed | `src/app/(app)/finance/**` |
+| Finance: due/overdue filters, loans, cards, money owed, spending | `src/app/(app)/finance/**` |
 | Work: JSR table + board, invoices, clients, weekly summary | `src/app/(app)/work/**` |
 | Reminders inbox, settings, backup/restore | `src/app/(app)/inbox`, `src/app/(app)/settings` |
 | Database schema, views, payment logic, reminders, demo mode | `supabase/migrations/*.sql` |
@@ -73,6 +73,12 @@ npm run build && npm run test:e2e   # browser end-to-end of the core flows (need
 2. Open **Ledger** from the Home Screen and sign in. The installed app keeps its own session, which is why sign-in uses a password rather than an email link.
 3. **Settings → Push notifications → Enable notifications → Allow**, then **Send test notification**.
 4. If nothing arrives, check iOS Settings → Notifications → Ledger and any Focus mode.
+
+## Spending
+
+Tap **₹ Add spend** on Home (or **+ → Spending**). Enter the amount, tap a category (Grocery, Vegetables & fruits, Meat & fish, Dairy, Fuel, …, or **+ New** for your own) and how you paid (UPI, Cash, Debit/Credit card, Net banking, Wallet). The date is filled in with today's date (India time); change it for an older spend. Home shows today / last 7 days / this month with the top categories. **Finance → Spending** has month-by-month totals by category and payment mode, filters, edit/delete and CSV export.
+
+Spends are tracked separately from the cash-flow chart, so a credit-card spend isn't counted twice (once when you buy, again when the card bill is paid).
 
 ## Reminders
 

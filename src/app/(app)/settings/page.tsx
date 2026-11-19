@@ -68,6 +68,7 @@ export default async function Settings() {
             <a className={btn.secondary} href="/api/export/csv?type=loans">Loans CSV</a>
             <a className={btn.secondary} href="/api/export/csv?type=cards">Card statements CSV</a>
             <a className={btn.secondary} href="/api/export/csv?type=debts">Money owed CSV</a>
+            <a className={btn.secondary} href="/api/export/csv?type=expenses">Spending CSV</a>
             <a className={btn.secondary} href="/api/export/csv?type=jsr">JSR CSV</a>
             <a className={btn.secondary} href="/api/export/csv?type=invoices">Invoices CSV</a>
           </div>

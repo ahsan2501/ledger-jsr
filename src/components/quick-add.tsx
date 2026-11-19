@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Sheet } from "./forms";
 import { CardBillForm, DebtForm, InvoiceForm, JsrItemForm, LoanForm, QuickFollowUpForm } from "./entry-forms";
 import { IconPlus } from "./icons";
+import { SpendForm } from "./spend-form";
 import type { Lookups } from "@/lib/data";
 
 const TYPES = [
+  { key: "spend", label: "Spending", sub: "Amount, category & payment mode" },
   { key: "card", label: "Credit card bill", sub: "Statement total, minimum & due date" },
   { key: "loan", label: "Loan", sub: "EMI, next due date & balance" },
   { key: "debt", label: "Money owed", sub: "I owe / owed to me" },
@@ -42,6 +44,7 @@ export function QuickAdd({ lookups }: { lookups: Lookups }) {
         ) : (
           <div className="pb-2">
             <button className="mb-3 text-sm text-accent" onClick={() => setType(null)}>← All types</button>
+            {type === "spend" && <SpendForm today={lookups.today} extraCategories={lookups.spendCategories} />}
             {type === "card" && <CardBillForm lookups={lookups} />}
             {type === "loan" && <LoanForm today={lookups.today} />}
             {type === "debt" && <DebtForm today={lookups.today} />}

@@ -11,6 +11,7 @@ const EXPORTS: Record<string, { view: string; cols: ReturnType<typeof c>; order:
   cards: { view: "v_card_statements", order: "due_date", cols: c("nickname:Card,issuer:Issuer,last4:Last 4,statement_date:Statement date,due_date:Due date,total_due:Total due,minimum_due:Minimum due,amount_paid:Paid,amount_remaining:Remaining,minimum_covered:Minimum covered,payment_status:Status") },
   debts: { view: "v_debts", order: "created_at", cols: c("direction:Direction,counterparty:Person / company,reason:Reason,original_amount:Original,amount_paid:Paid,amount_remaining:Remaining,due_date:Agreed due,next_due_date:Next due,follow_up_date:Follow-up,closed:Closed,notes:Notes") },
   jsr: { view: "v_jsr_items", order: "client_name", cols: c("client_name:Client,project_name:Project,title:Deliverable,status:Status,next_action:Next action,next_owner:Next move,action_due:Action due,follow_up_date:Follow-up,priority:Priority,last_contact_on:Last contact,waiting_days:Waiting days,billing:Billing,links:Links,notes:Notes") },
+  expenses: { view: "expenses", order: "spent_on", cols: c("spent_on:Date,category:Category,amount:Amount (INR),payment_mode:Paid by,note:Note") },
   invoices: { view: "v_invoices", order: "invoice_date", cols: c("invoice_number:Invoice no,client_name:Client,project_name:Project,invoice_date:Invoice date,due_date:Due date,amount:Taxable amount,gst_amount:GST,total:Total,tds_amount:TDS expected,received_bank:Received (bank),tds_confirmed:TDS confirmed,net_expected:Net still expected,status:Status,sent_on:Sent on,notes:Notes") },
 };
 
