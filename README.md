@@ -63,7 +63,7 @@ npm run build && npm run test:e2e   # browser end-to-end of the core flows (need
    ```bash
    npx supabase db push
    ```
-2. In Supabase → Authentication → Sign In / Providers: keep Email enabled. After creating your account, **turn off "Allow new users to sign up"**. Add your app URL under URL Configuration.
+2. Create your login in Supabase → Authentication → Users → **Add user → Create new user** (tick **Auto Confirm User**). Then in Authentication → Sign In / Providers, **turn off "Allow new users to sign up"**. Keep `ALLOW_SIGNUP=false` in the app.
 3. Import the repo into Vercel and set every variable from `.env.example` (Production). `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY` and `CRON_SECRET` are server-only; never prefix them with `NEXT_PUBLIC_`. Set `ALLOWED_EMAILS` to your email.
 4. Scheduler: `vercel.json` calls `/api/cron/reminders` daily at 03:30 UTC (= 9:00 IST); Vercel sends `Authorization: Bearer $CRON_SECRET` automatically. If you change the reminder time, or want retries during the day, also run `supabase/scheduler.sql` (pg_cron every 15 minutes). Running the scheduler more often never duplicates notifications.
 
